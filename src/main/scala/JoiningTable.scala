@@ -22,10 +22,6 @@ object JoiningTable {
 
 
 
-    val tasteInput = sc.textFile("train_triplets.txt")
-    val taste = tasteInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }
-
-
 
     val download_keyPair = downloadRecord.map(d => ((d.getArtist(),d.getTitle()), (d.getMeanPrice(),d.getDownload(),d.getConfidence())))
       //download_keyPair is (key,value) where key -> (artist, title); value -> (price, download, confidence)
@@ -47,6 +43,16 @@ object JoiningTable {
 
     val jam_download_song_join = jam_keyPair.join(download_song_keyPair)
 
+    val tasteInput = sc.textFile("train_triplets.txt")
+    val taste = tasteInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }.map(new Taste(_))
+    val taste_keyPair = taste.map(t => (t.getSong(),t.getCount()))
+    val jam_download_song_keyPair = jam_download_song_join.map{
+      case ((trackId: String,(jam_count: Long,(songId,price,download,confidence,famil,artHot,dur,loud,songHot,tempo ))))
+      => (songId,(trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))
+    }
+
+    val final_join = taste_keyPair.join(jam_download_song_keyPair)
+
 
 
 
@@ -59,14 +65,7 @@ object JoiningTable {
     val join = song.join(download)
   }
 
-  //select taste that has the same track id as songInfo dataset,print to csv
-  def getSubTasteData(sc: SparkContext, songRecord: RDD[SongInfo]): Unit = {
-    val tasteInput = sc.textFile("train_triplets.txt")
-    val taste = tasteInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }
-    val tasteCountTuple = taste.filter(row => isInSongInfo(row))
-  }
 
-  def
 
 }
 

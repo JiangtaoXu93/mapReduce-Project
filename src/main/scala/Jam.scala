@@ -9,9 +9,9 @@ class Jam(jam : String, track : String) {
     this.TRACK_ID = tokens(1)
   }
 
-  def getJam():String = JAM_ID
+  def getJam():String = this.JAM_ID
 
-  def getTrack():String = TRACK_ID
+  def getTrack():String = this.TRACK_ID
 
 
 }
