@@ -55,10 +55,13 @@ object JoiningTable {
     val taste_keyPair = taste.map(t => (t.getSong(),t.getCount()))
     val jam_download_song_keyPair = jam_download_song_join.map{
       case ((trackId: String,(jam_count: Long,(songId,price,download,confidence,famil,artHot,dur,loud,songHot,tempo ))))
-      => (songId,(trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))
+      => (songId,(jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))
     }
 
-    val final_join = taste_keyPair.join(jam_download_song_keyPair)
+    val final_join = taste_keyPair.join(jam_download_song_keyPair).map{
+      case ((songId,(taste_count,(jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))))
+        => (songId,(taste_count,jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))
+    }
 
     val test = final_join.collect()
 
