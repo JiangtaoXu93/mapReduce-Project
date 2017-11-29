@@ -1,3 +1,5 @@
+import java.io.FileWriter
+
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -13,11 +15,15 @@ object JoiningTable {
 
     val downloadInput = sc.textFile("downloads.csv")
     val downloads = downloadInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }
+    System.out.println("before filter download " + downloads.count())
     val downloadRecord = downloads.map(row => new DownloadInfo(row)).filter(_.checkValidity())
-
+    System.out.println("after filter download " + downloadRecord.count())
     val songInput = sc.textFile("MillionSongSubset/song_info.csv")
     val songs = songInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }
+    System.out.println("before filter " + songs.count())
+
     val songRecord = songs.map(row => new SongInfo(row)).filter(_.checkValidity())
+    System.out.println("after filter " + songRecord.count())
 
 
 
@@ -30,6 +36,7 @@ object JoiningTable {
         (s.getTrackId(), s.getSongId(),s.getArtFam(),s.getArtHot(),s.getDuration(),s.getLoudness(),s.getSongHot(),s.getTempo())))
       //songInfo_keyPair: same key as download_keyPair
     val download_songInfo_join = download_keyPair.join(songInfo_keyPair)
+    System.out.println("download_songInfo_join " + download_songInfo_join.count())
 
 
     val jamInput = sc.textFile("jam_to_msd.tsv")
@@ -53,17 +60,31 @@ object JoiningTable {
 
     val final_join = taste_keyPair.join(jam_download_song_keyPair)
 
+    val test = final_join.collect()
+
+    val result = final_join.collect().toList
+
+    val name = "dataset"
+    val fw = new FileWriter(name)
+    for (i <- result) {
+      fw.append(i._1.toString)
+      fw.append(",")
+      fw.append(i._2.toString)
+      fw.append("\n")
+    }
+    fw.close()
+
 
 
 
   }
 
-  def getTop5HottestGenre(songRecord: RDD[SongInfo], downloadRecord: RDD[DownloadInfo]): Unit = {
-
-    val song = songRecord.map(lines => (lines.getCombinedKey(),lines.getDuration()))
-    val download = downloadRecord.map(lines => (lines.getCombinedKey(),lines.getDownload()))
-    val join = song.join(download)
-  }
+//  def getTop5HottestGenre(songRecord: RDD[SongInfo], downloadRecord: RDD[DownloadInfo]): Unit = {
+//
+//    val song = songRecord.map(lines => (lines.getCombinedKey(),lines.getDuration()))
+//    val download = downloadRecord.map(lines => (lines.getCombinedKey(),lines.getDownload()))
+//    val join = song.join(download)
+//  }
 
 
 

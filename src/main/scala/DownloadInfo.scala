@@ -15,31 +15,30 @@ class DownloadInfo(row:String) extends java.io.Serializable {
   try {
     artist = line(0)
     title = line(1)
-    combinedKey = artist+"_"+title
     meanPrice = line(2).toDouble
     download = line(3).toInt
+    confidence = line(4)
   } catch {
     case e: Exception => isValid = false
   }
 
-  def getArtist(): String = artist
+  def getArtist(): String = this.artist
 
-  def getTitle(): String = title
+  def getTitle(): String = this.title
 
-  def getMeanPrice(): Double = meanPrice
+  def getMeanPrice(): Double = this.meanPrice
 
-  def getDownload(): Int = download
+  def getDownload(): Int = this.download
 
-  def getConfidence(): String = confidence
+  def getConfidence(): String = this.confidence
 
-  def getCombinedKey(): String = combinedKey
 
   def checkValidity():Boolean ={
 
     var result = false
-    if (isValid && getMeanPrice() > 0.00
+    if (isValid && getMeanPrice() > 0
       && getDownload()>0
-      && !getTitle().isEmpty && !getArtist().isEmpty && !getConfidence().isEmpty) {
+      && !getTitle().equals("") && !getArtist().equals("") && !getConfidence().equals("")) {
       result = true
     }
     result
