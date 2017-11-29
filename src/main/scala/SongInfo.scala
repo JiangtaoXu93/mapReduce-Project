@@ -22,6 +22,7 @@ class SongInfo(row:String) extends java.io.Serializable{
 
   // Converting values to respective data types and eliminating invalid record
   try {
+
     duration = line(5).toDouble
     loudness = line(6).toDouble
     tempo = line(7).toDouble
@@ -34,6 +35,7 @@ class SongInfo(row:String) extends java.io.Serializable{
     case e: Exception => isValidRow = false
   }
 
+  def getTrackId(): String = line(0)
 
   def getKey(): Int = key
 
