@@ -1,11 +1,12 @@
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.Row
-import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.regression.LabeledPoint
+
+
+import org.apache.spark.ml.regression. LinearRegression
 
 import org.apache.spark.ml.feature.VectorAssembler
 
+import org.apache.spark.ml.evaluation.RegressionEvaluator
 
 object LinearRegression {
   def main(args: Array[String]): Unit = {
@@ -26,15 +27,27 @@ object LinearRegression {
         .setInputCols(Array("taste_count","jam_count", "price","famil","artHot","dur","loud","songHot","tempo"))
         .setOutputCol("features")
     dataset = assembler.transform(dataset).cache()
-
-    dataset.printSchema()
-
+    dataset = dataset.select("download","features").cache()
+    dataset = dataset.withColumnRenamed("download","label").cache()
 
     val Array(train,test) = dataset.randomSplit(Array(0.8,0.2))
 
-    println(train.count(),test.count())
+    val regressor = new LinearRegression()
+    val model = regressor.fit(train)
+
+    val predictions = model.transform(test)
 
 
+
+    val evaluator = new RegressionEvaluator()
+      .setMetricName("rmse")
+      .setLabelCol("label")
+      .setPredictionCol("prediction")
+    val rmse = evaluator.evaluate(predictions)
+
+    println("dataset size "+dataset.count())
+
+    println("Root-mean-square error = "+rmse)
   }
 
 
