@@ -52,7 +52,7 @@ object JoiningTable {
 
     val tasteInput = sc.textFile("train_triplets.txt")
     val taste = tasteInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }.map(new Taste(_))
-    val taste_keyPair = taste.map(t => (t.getSong(),t.getCount()))
+    val taste_keyPair = taste.map(t => (t.getSong(),t.getCount())).reduceByKey(_+_)
     val jam_download_song_keyPair = jam_download_song_join.map{
       case ((trackId: String,(jam_count: Long,(songId,price,download,confidence,famil,artHot,dur,loud,songHot,tempo ))))
       => (songId,(jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))
@@ -60,7 +60,7 @@ object JoiningTable {
 
     val final_join = taste_keyPair.join(jam_download_song_keyPair).map{
       case ((songId,(taste_count,(jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))))
-        => (songId,(taste_count,jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo))
+        => (songId,taste_count,jam_count, trackId, price,download,confidence,famil,artHot,dur,loud,songHot,tempo)
     }
 
     val test = final_join.collect()
@@ -70,9 +70,7 @@ object JoiningTable {
     val name = "dataset"
     val fw = new FileWriter(name)
     for (i <- result) {
-      fw.append(i._1.toString)
-      fw.append(",")
-      fw.append(i._2.toString)
+      fw.append(i.toString().substring(1,i.toString().length-1))
       fw.append("\n")
     }
     fw.close()
