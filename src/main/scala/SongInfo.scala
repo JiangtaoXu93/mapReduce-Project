@@ -55,32 +55,19 @@ class SongInfo(row:String) extends java.io.Serializable{
 
   def getArtId(): String = line(16)
 
-  def getArtistName(): String = line(17).toLowerCase().replaceAll("\\s", "")
+  def getArtistName(): String = {
+//    val ignored = Set(
+//      "and", "ft","vs","-", "&")
+    return line(17).toLowerCase.replaceAll("\\s","")
+  }
 
   def getAlbum(): String = line(22)
 
   def getSongId(): String = line(23)
 
-  def getTitle(): String = line(24).toLowerCase().replaceAll("\\s", "")
+  def getTitle(): String = line(24).toLowerCase.replaceAll("\\s","")
 
   def getCombinedKey(): String = getArtistName()+"_"+getTitle()
-
-//  def checkValidity(): Boolean = {
-//    var result = false
-//    if (isValidRow && getDuration() > 0.00
-//      && getLoudness() < 0.00
-//      && getTempo() > 0.00
-//      && getKey() > 0
-//      && getKeyConf() > 0 && getKeyConf() < 1
-//      && getArtFam() > 0
-//      && getArtHot() > 0
-//      && getSongHot() > 0
-//      && !(getAlbum.equalsIgnoreCase("na"))
-//      && !(getTitle().isEmpty) && !(getSongId().isEmpty) && !(getArtId().isEmpty && !(getArtistName.isEmpty))) {
-//      result = true
-//    }
-//    result
-//  }
 
   def checkValidity(): Boolean = {
     var result = false
