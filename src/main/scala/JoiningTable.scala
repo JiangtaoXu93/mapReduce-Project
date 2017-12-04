@@ -28,12 +28,19 @@ object JoiningTable {
     val songInfos = songRecord.map(
       s => (s.getArtistName(),s.getTitle(),s.getTrackId(), s.getSongId(),s.getArtFam(),s.getArtHot(),s.getDuration(),s.getLoudness(),s.getSongHot(),s.getTempo()))
     val songInfoDF = spark_session.createDataFrame(songInfos).toDF("ArtistName","Title","TrackId", "SongId","ArtFam","ArtHot","Duration","Loudness","SongHot","Tempo")// get song info data frame
+//
+//    songInfoDF.createOrReplaceTempView("songInfoDF") // Register the DataFrame as a SQL temporary view
+//    downloadDF.createOrReplaceTempView("downloadDF") // Register the DataFrame as a SQL temporary view
 
-//    songInfoDF.join(downloadDF,(songInfoDF("ArtistName").like("%" + downloadDF("ArtistName") + "%") || downloadDF("ArtistName").like("%" + songInfoDF("ArtistName") + "%"))
-//      && (songInfoDF("Title").like("%" + downloadDF("Title") + "%") || downloadDF("Title").like("%" + songInfoDF("Title"))),"right_outer")
+    //val download_songInfo_DF_sql = spark_session.sql("SELECT * FROM songInfoDF inner JOIN downloadDF ON downloadDF.DownloadArtistName like CONCAT('%', songInfoDF.ArtistName,'%')  ")
 
-    val download_songInfo_DF = songInfoDF.join(downloadDF,(downloadDF("DownloadArtistName").like("%" + songInfoDF("ArtistName") + "%"))
-          && (downloadDF("DownloadTitle").like("%" + songInfoDF("Title") + "%")),"cross")
+
+    val download_songInfo_DF = songInfoDF.join(downloadDF,downloadDF("DownloadArtistName") === songInfoDF("ArtistName") && downloadDF("DownloadTitle") === songInfoDF("Title")
+      ,"cross").drop(downloadDF("DownloadArtistName")).drop(downloadDF("DownloadTitle"))
+//    val download_songInfo_DF = songInfoDF.join(downloadDF,(downloadDF("DownloadArtistName").like("%" + songInfoDF("ArtistName") + "%"))
+//          && (downloadDF("DownloadTitle").like("%" + songInfoDF("Title") + "%")),"cross")
+//    download_songInfo_DF.createOrReplaceTempView("download_songInfo_DF") // Register the DataFrame as a SQL temporary view
+//    val download_songInfo_DF_sql
 //val download_songInfo_DF = songInfoDF.join(downloadDF,(downloadDF("DownloadArtistName")===songInfoDF("ArtistName") )
 //  && (downloadDF("DownloadTitle")=== songInfoDF("Title") ),"cross")
 
@@ -42,7 +49,7 @@ object JoiningTable {
 //    val download_songInfo_join = download_keyPair.join(songInfo_keyPair)
 //    System.out.println("download_songInfo_join " + download_songInfo_join.count())
     System.out.println("download_songInfo_DF " + rows.count())
-
+//
 
     val jamInput = sc.textFile("jam_to_msd.tsv")
     val jams = jamInput.mapPartitionsWithIndex { (idx, iterate) => if (idx == 0) iterate.drop(1) else iterate }.map(new Jam(_))
@@ -50,8 +57,8 @@ object JoiningTable {
     val jam_rdd = sc.parallelize(jamCount.toSeq)// convert Collection[Map] to RDD
     val jamDF = spark_session.createDataFrame(jam_rdd).toDF("JamTrackId","JamCount")// get jam count data frame
 //
-    val jam_download_song_DF = download_songInfo_DF.join(jamDF,download_songInfo_DF("TrackId") === jamDF("JamTrackId"),"left_outer").na.fill(0,Seq("JamCount"))
-//    //System.out.println("jam_download_song_DF " + jam_download_song_DF.count())
+    val jam_download_song_DF = download_songInfo_DF.join(jamDF,download_songInfo_DF("TrackId") === jamDF("JamTrackId"),"left_outer").drop(jamDF("JamTrackId")).na.fill(0,Seq("JamCount"))
+    //System.out.println("jam_download_song_DF " + jam_download_song_DF.count())
 //
 //
 ////
