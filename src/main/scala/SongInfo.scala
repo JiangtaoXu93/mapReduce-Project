@@ -55,13 +55,13 @@ class SongInfo(row:String) extends java.io.Serializable{
 
   def getArtId(): String = line(16)
 
-  def getArtistName(): String = line(17)
+  def getArtistName(): String = line(17).toLowerCase()
 
   def getAlbum(): String = line(22)
 
   def getSongId(): String = line(23)
 
-  def getTitle(): String = line(24)
+  def getTitle(): String = line(24).toLowerCase()
 
   def getCombinedKey(): String = getArtistName()+"_"+getTitle()
 

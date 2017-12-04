@@ -22,9 +22,9 @@ class DownloadInfo(row:String) extends java.io.Serializable {
     case e: Exception => isValid = false
   }
 
-  def getArtist(): String = this.artist
+  def getArtist(): String = this.artist.toLowerCase()
 
-  def getTitle(): String = this.title
+  def getTitle(): String = this.title.toLowerCase()
 
   def getMeanPrice(): Double = this.meanPrice
 
