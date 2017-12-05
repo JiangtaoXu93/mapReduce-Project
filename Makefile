@@ -10,7 +10,7 @@ build:
 
 run:
 	#configuration for C5/C5 xLARGE
-	spark-submit --deploy-mode cluster --master yarn --num-executors 4 --executor-cores 4 --executor-memory 4g --class GBTRegression  $(JAR_NAME)
+	spark-submit  --master local[*]   --class GBTRegression  $(JAR_NAME)  data     model_saved
 
 
 
