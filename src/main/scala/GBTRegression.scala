@@ -11,7 +11,11 @@ object GBTRegression{
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
+    // Specify dataset and model names
     val datasetName = "dataset_400k.csv"
+    val maxIter = 20
+    val maxDepth =15
+    val modelName = "GBTRegression-"+datasetName+"-maxIter"+maxIter+"-maxDepth"+maxDepth
 
 //    var dataset = sqlContext.read
 //      .format("com.databricks.spark.csv")
@@ -21,7 +25,6 @@ object GBTRegression{
 //      .distinct()
 //      .toDF("songId","taste_count","jam_count", "trackId", "price","download","confidence","famil","artHot","dur","loud","songHot","tempo")
 //      .cache()
-//    dataset.printSchema()
 //
 //    val assembler = new VectorAssembler()
 //        .setInputCols(Array("taste_count","jam_count", "price","famil","artHot","dur","loud","songHot","tempo"))
@@ -40,10 +43,6 @@ object GBTRegression{
       .toDF("artFam","artHot","duration","loudness","songHot","tempo","meanPrice","download","confidence","Jamcount","tastecount")
       .na.drop()
       .cache()
-    dataset.printSchema()
-    println("dataset size "+dataset.count())
-
-    println("assmbling features.....")
     val assembler = new VectorAssembler()
       .setInputCols(Array("artFam","artHot","duration","loudness","songHot","tempo","meanPrice","download","Jamcount","tastecount"))
       .setOutputCol("features")
@@ -52,23 +51,23 @@ object GBTRegression{
     dataset = dataset.withColumnRenamed("download","label").cache()
 
 
-
     val Array(train,test) = dataset.randomSplit(Array(0.8,0.2))
 
-    // Train a GBT  model.
-    val maxIter = 20
-    val maxDepth =15
-    val gbt = new GBTRegressor()
-      .setLabelCol("label")
-      .setFeaturesCol("features")
-      .setMaxIter(maxIter)
-      .setMaxDepth(maxDepth)
 
-    println("Start training models.....")
-    //val model = gbt.fit(train)
-    //model.save(args(1)+"/GBTRegression-"+datasetName+"-maxIter"+maxIter+"-maxDepth"+maxDepth)
 
-    val model =  GBTRegressionModel.load(args(1)+"/GBTRegression-"+datasetName+"-maxIter"+maxIter+"-maxDepth"+maxDepth)
+//    println("Start training models.....")
+//    val gbt = new GBTRegressor()
+//      .setLabelCol("label")
+//      .setFeaturesCol("features")
+//      .setMaxIter(maxIter)
+//      .setMaxDepth(maxDepth)
+//    val model = gbt.fit(train)
+//    model.save(args(1)+"/"+modelName)
+
+
+    println("Loading pre-trained model")
+    val model =  GBTRegressionModel.load(args(1)+"/"+modelName)
+
     println("Making predictions")
     val predictions = model.transform(test)
 
@@ -80,7 +79,6 @@ object GBTRegression{
     val rmse = evaluator.evaluate(predictions)
     println("Dataset size "+dataset.count())
     println("Root Mean Squared Error (RMSE) on test data = " + rmse)
-
 
   }
 
