@@ -7,7 +7,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 object GBTRegression {
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setMaster("local").setAppName("SPARK ML")
+    val conf = new SparkConf().setAppName("GBTRegression")
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
