@@ -9,7 +9,8 @@ build:
 	cp target/scala-*/*.jar $(JAR_NAME)
 
 run:
-	spark-submit --class LinearRegression --master local $(JAR_NAME)
+	#configuration for C5/C5 xLARGE
+	spark-submit --deploy-mode cluster --master yarn --num-executors 4 --executor-cores 4 --executor-memory 4g --class GBTRegression  $(JAR_NAME)
 
 
 
