@@ -15,7 +15,7 @@ object RandomForestRegression {
       .format("com.databricks.spark.csv")
       .option("header", "true")
       .option("inferSchema", "true")
-      .load("dataset.csv")
+      .load("dataset_5k.csv")
       .distinct()
       .toDF("songId","taste_count","jam_count", "trackId", "price","download","confidence","famil","artHot","dur","loud","songHot","tempo")
       .cache()

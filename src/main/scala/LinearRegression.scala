@@ -38,7 +38,6 @@ object LinearRegression {
     val predictions = model.transform(test)
 
 
-
     val evaluator = new RegressionEvaluator()
       .setMetricName("rmse")
       .setLabelCol("label")
