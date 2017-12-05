@@ -11,11 +11,20 @@ object RandomForestRegression {
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
+
+    // Specify dataset and model names
+    val datasetName = "dataset_32k.csv"
+    val numTree = 20
+    val maxDepth =15
+    val featureStra ="auto"
+    val modelName = "RFRegression-"+datasetName+"-numTree"+numTree+"-maxDepth"+maxDepth+"-featureStra_"+featureStra
+
+
     var dataset = sqlContext.read
       .format("com.databricks.spark.csv")
       .option("header", "true")
       .option("inferSchema", "true")
-      .load("dataset_5k.csv")
+      .load(args(0)+"/"+datasetName)
       .distinct()
       .toDF("songId","taste_count","jam_count", "trackId", "price","download","confidence","famil","artHot","dur","loud","songHot","tempo")
       .cache()
@@ -27,33 +36,30 @@ object RandomForestRegression {
     dataset = dataset.select("download","features").cache()
     dataset = dataset.withColumnRenamed("download","label").cache()
 
-
     val Array(train,test) = dataset.randomSplit(Array(0.8,0.2))
 
-    // Train a RandomForest model.
-    val rf = new RandomForestRegressor()
-      .setLabelCol("label")
-      .setFeaturesCol("features")
-      .setMaxDepth(14)
-      .setFeatureSubsetStrategy("auto")
-      .setNumTrees(200)
+//    println("Start training models.....")
+//    val rf = new RandomForestRegressor()
+//      .setLabelCol("label")
+//      .setFeaturesCol("features")
+//      .setMaxDepth(maxDepth)
+//      .setFeatureSubsetStrategy(featureStra)
+//      .setNumTrees(numTree)
+//    val model = rf.fit(train)
+//    model.save(args(1)+"/"+modelName)
 
 
-    //val model = rf.fit(train)
-    //model.save("model_saved/RandomForestRegression")
-
-
-    val model = RandomForestRegressionModel.load("model_saved/RandomForestRegression")
+    println("Loading pretrianed model")
+    val model = RandomForestRegressionModel.load(args(1)+"/"+modelName)
     // Make predictions.
     val predictions = model.transform(test)
 
-    // Select (prediction, true label) and compute test error.
     val evaluator = new RegressionEvaluator()
       .setLabelCol("label")
       .setPredictionCol("prediction")
       .setMetricName("rmse")
     val rmse = evaluator.evaluate(predictions)
-    println("dataset size "+ dataset.count())
+    println("Dataset size "+ dataset.count())
     println("Root Mean Squared Error (RMSE) on test data = " + rmse)
 
 
