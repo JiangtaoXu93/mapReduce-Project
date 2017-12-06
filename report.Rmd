@@ -1,0 +1,39 @@
+---
+title: "Project Report"
+author: "Jiangtao Xu/Yang Xia/Yu Wen"
+date: "2017/12/5"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+###<span style = "color:#588bae">Objective</span> 
+Given a download dataset, try to make a machine learning model to predict downloads based on several dataset.
+
+###<span style = "color:#588bae">Preparing Data</span>
+ - Inferred some missing values in songInfo. 
+ - Aggregated Jam and number times a song been played on songs.
+ - Some pre-processing on artist name and song title, so that after joining the 2 tables, we don't lost too much information.
+ 
+###<span style = "color:#588bae">Obtaining Dataset</span>
+-  General idea: inner joint 2 tables: song_info and donwloads on artist name and song title.
+-  Left joint Jam and taste: fill in 0 with the missing values. We think this assumption is valid because if a song never show up in these tables, most likely nobody likes them and nobody has played it. Our model accuracy partly endorse this assumption.
+
+###<span style = "color:#588bae">Implementation</span>
+-  We make use of the dataframe in spark to make efficient join.
+
+###<span style = "color:#588bae">Choosing Features</span>
+-  Explanation of the features that we chosed.
+
+###<span style = "color:#588bae">Model Selection</span>
+-  Trying with different model and the result.
+
+
+###<span style = "color:#588bae">Machine Learning Implementation</span>
+-  Spark ML
+
+
+###<span style = "color:#588bae">Testing With Current Model</span>
+
