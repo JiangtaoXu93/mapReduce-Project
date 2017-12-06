@@ -7,25 +7,31 @@ import org.apache.spark.{SparkConf, SparkContext}
 object GBTRegression{
 
   def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("GBTRegression")
-    val sc = new SparkContext(conf)
-    val sqlContext = new SQLContext(sc)
-
     val inputDir = args(0)
     val outputDir = args(1)
     val mode = args(2)
     val csvName = args(3)
 
-    val dataset = CSVConverter.prepareDataset(csvName,args(0),sqlContext)
-    val Array(train,test) = dataset.randomSplit(Array(0.8,0.2))
-
-
-    // set parameters
+    // set parameters for GBT
     val maxIter = 25
     val maxDepth = 20
 
+
+
     //specify model names according to algorithm, csvName and its parameters
     val modelName = "GBTRegression-" +csvName +"-maxIter"+maxIter+"-maxDepth"+maxDepth
+
+
+
+
+    val conf = new SparkConf().setAppName(modelName)
+    val sc = new SparkContext(conf)
+    val sqlContext = new SQLContext(sc)
+
+
+    val dataset = DataReader.convertCSV(csvName,args(0),sqlContext)
+    val Array(train,test) = dataset.randomSplit(Array(0.8,0.2))
+
 
     if(mode == "training") {
       println("Start training models.....")
