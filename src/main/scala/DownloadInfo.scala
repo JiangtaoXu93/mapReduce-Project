@@ -22,20 +22,9 @@ class DownloadInfo(row:String) extends java.io.Serializable {
     case e: Exception => isValid = false
   }
 
-  def cleanArtist(artist:String):String={
-    val arr = artist.toCharArray
-    val result = new StringBuilder
-    for(i <- arr){
-      if(i.isLetterOrDigit){
-        result.append(i.toLower)
-      }
-    }
-    return result.toString()
-  }
+  def getArtist(): String = this.artist.toLowerCase.replaceAll("\\s","").replace(",","").replace(";","")
 
-  def getArtist(): String = this.artist.toLowerCase.replaceAll("\\s","") //cleanArtist(this.artist)
-
-  def getTitle(): String = this.title.toLowerCase.replaceAll("\\s","")
+  def getTitle(): String = this.title.toLowerCase.replaceAll("\\s","").replace(",","").replace(";","")
 
   def getMeanPrice(): Double = this.meanPrice
 
@@ -48,7 +37,7 @@ class DownloadInfo(row:String) extends java.io.Serializable {
 
     var result = false
     if (isValid && getMeanPrice() > 0
-      && getDownload()>10
+      && getDownload()>0
       && !getTitle().equals("") && !getArtist().equals("") && !getConfidence().equals("")) {
       result = true
     }
