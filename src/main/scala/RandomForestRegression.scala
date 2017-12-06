@@ -63,10 +63,6 @@ object RandomForestRegression {
     println("Root Mean Squared Error (RMSE) on test data = " + rmse)
 
 
-
   }
-
-
-
 
 }
