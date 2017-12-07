@@ -63,6 +63,7 @@ object DataReader {
   }
 
 
+
   def convertCSV_LinearRegression(csvName: String, datasetDir: String, sqlContext: SQLContext): DataFrame = {
 
 
@@ -127,46 +128,37 @@ object DataReader {
   }
 
 
-  def getEvaluationDataFrame(queryFile: String, dataSetFile: String, sc: SparkContext): DataFrame = {
+
+
+  def getEvaluationDataFrame(queryFile:String, dataSetFile:String, sc:SparkContext,sqlContext: SQLContext): DataFrame ={
     // return should be Dataframe
     // input file format : a txt file with first column artist , second column song tittle
     val spark_session: SparkSession = SparkSession.builder.master("local").getOrCreate
-    val dataset = Source.fromFile(dataSetFile)
-    val datasetIter = dataset.getLines().map(_.split(","))
-    val query = Source.fromFile(queryFile)
-    val queryIter = query.getLines().map(_.split(";"))
-    val result = new StringBuilder
-    // print the uid for Guest
-    for (l <- queryIter) {
-      val compound_key = l(0).toLowerCase.replaceAll("\\s", "").replace(",", "").replace(";", "") + "_" +
-        l(1).toLowerCase.replaceAll("\\s", "").replace(",", "").replace(";", "")
-      for (i <- datasetIter) {
-        val key = i.toString.split(",")(0)
-        if (i(0).equals(compound_key)) {
-          result.append(i)
-          result.append(";")
-        }
-      }
-      val test = 1
-    }
+    val conf = new SparkConf().setMaster("local").setAppName("Joint2DataFrame")
+    val sc = new SparkContext(conf)
 
-    query.close()
-    dataset.close()
 
-    val name = "selected_record"
-    val fw = new FileWriter(name)
-    val temp = result.toString().split(";")
-    for (i <- temp) {
-      fw.append(i.toString)
-      fw.append("\n")
-    }
-    fw.close()
+    // Create two dataframe, one for query and the other for our dataset
+    val dataset = sqlContext.read
+      .format("com.databricks.spark.csv")
+      .option("header", "true")
+      .option("inferSchema", "true")
+      .load("data/" + dataSetFile)
+      .distinct()
 
-    val songInput = sc.textFile("selected_record")
+    val dataSetRecord = dataset.toDF("key", "artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "jamCount", "tasteCount").cache()
 
-    val songInfos = songInput.map(s => (s(1), s(2), s(3), s(4), s(5), s(6), s(7), s(8), s(9), s(10)))
-    val songInfoDF = spark_session.createDataFrame(songInfos).toDF("ArtFam", "ArtHot", "Duration", "Loudness", "SongHot", "Tempo", "meanPrice", "download", "jamCount", "tastecount")
-    songInfoDF
+
+    val queryInfo = sc.textFile("data/" + queryFile).map(q => (q.split(";")(0).toLowerCase.replaceAll("\\s","").replaceAll("\\p{P}","")+"_"
+      +q.split(";")(1).toLowerCase.replaceAll("\\s","").replaceAll("\\p{P}",""),1))
+
+    val queryRecord = spark_session.createDataFrame(queryInfo).toDF("key","count").drop("count")
+
+    val joint = queryRecord.join(dataSetRecord,queryRecord("key")===dataSetRecord("key"),"inner").drop(dataSetRecord("key"))
+
+
+    joint
+
     // feature for 680K CSV is Array("artist","songTitle","trackID","songID","artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "confidence", "jamCount", "tastecount")
   }
 
