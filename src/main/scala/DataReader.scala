@@ -26,7 +26,7 @@ object DataReader {
         dataset = dataset.toDF("songId", "taste_count", "jam_count", "trackId", "price", "download", "confidence", "famil", "artHot", "dur", "loud", "songHot", "tempo")
           .cache()
 
-        assembler.setInputCols(Array("taste_count", "jam_count", "price", "famil", "artHot", "dur", "loud", "songHot", "tempo"))
+        assembler.setInputCols(Array( "price", "famil", "artHot", "dur", "loud", "songHot", "tempo"))
           .setOutputCol("features")
         dataset = assembler.transform(dataset)
 
@@ -36,7 +36,7 @@ object DataReader {
         dataset = dataset.toDF("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "confidence", "jamCount", "tastecount")
           .na.drop()
 
-        assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "jamCount", "tastecount"))
+        assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice"))
           .setOutputCol("features")
         dataset = assembler.transform(dataset)
 
@@ -45,7 +45,7 @@ object DataReader {
         dataset = dataset.toDF("artist", "songTitle", "trackID", "songID", "artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "confidence", "jamCount", "tastecount")
           .na.drop()
 
-        assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "jamCount", "tastecount"))
+        assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice"))
           .setOutputCol("features")
         dataset = assembler.transform(dataset)
 
@@ -62,34 +62,6 @@ object DataReader {
 
     }
 
-    dataset = dataset.select("download", "features")
-    dataset = dataset.withColumnRenamed("download", "label").cache()
-    dataset
-  }
-
-  def convertCSV_LinearRegression(csvName: String, datasetDir: String, sqlContext: SQLContext): DataFrame = {
-
-    var dataset = sqlContext.read
-      .format("com.databricks.spark.csv")
-      .option("header", "true")
-      .option("inferSchema", "true")
-      .load(datasetDir + "/" + csvName)
-      .distinct()
-
-
-    // get features and labels
-    val assembler = new VectorAssembler()
-
-    csvName match {
-
-      case "dataset_820k.csv" => {
-        dataset = dataset.toDF("key", "artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "jamCount", "tasteCount")
-        assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice"))
-          .setOutputCol("features")
-        dataset = assembler.transform(dataset)
-      }
-
-    }
     dataset = dataset.select("download", "features")
     dataset = dataset.withColumnRenamed("download", "label").cache()
     dataset
@@ -117,23 +89,24 @@ object DataReader {
 
     val queryRecord = spark_session.createDataFrame(queryInfo).toDF("key", "count").drop("count")
 
-    var joint = queryRecord.join(dataSetRecord, queryRecord("key") === dataSetRecord("key"), "left_outer")
-      .drop(dataSetRecord("key"))
-      .na.fill(0.56,Seq("artFam"))
-      .na.fill(0.377,Seq("artHot"))
-      .na.fill(246.57,Seq("duration"))
-      .na.fill(-9.95,Seq("loudness"))
-      .na.fill(0.328,Seq("songHot"))
-      .na.fill(124.34,Seq("tempo"))
-      .na.fill(1.26,Seq("meanPrice"))
-      .na.fill(7296,Seq("download"))
-      .na.fill(0.92,Seq("jamCount"))
-      .na.fill(141.93,Seq("tasteCount"))
-        .distinct()
+//    var joint = queryRecord.join(dataSetRecord, queryRecord("key") === dataSetRecord("key"), "left_outer")
+//      .distinct()
+//      .drop(dataSetRecord("key"))
+//      .na.fill(0.56,Seq("artFam"))
+//      .na.fill(0.377,Seq("artHot"))
+//      .na.fill(246.57,Seq("duration"))
+//      .na.fill(-9.95,Seq("loudness"))
+//      .na.fill(0.328,Seq("songHot"))
+//      .na.fill(124.34,Seq("tempo"))
+//      .na.fill(1.26,Seq("meanPrice"))
+//      .na.fill(7296,Seq("download"))
+//      .na.fill(0.92,Seq("jamCount"))
+//      .na.fill(141.93,Seq("tasteCount"))
+    var joint = queryRecord.join(dataSetRecord, queryRecord("key") === dataSetRecord("key"), "inner")
 
     val assembler = new VectorAssembler()
-    assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice","download", "jamCount", "tasteCount"))
-    //assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice","download"))
+    //assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "jamCount", "tasteCount"))
+    assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice"))
       .setOutputCol("features")
     joint = assembler.transform(joint)
     joint = joint.select("download", "features")
