@@ -66,27 +66,29 @@ object DataReader {
   }
 
 
-  def getEvaluationDataFrame(inputFile:String, features:Array[String], sc:SparkContext): DataFrame ={
+  def getEvaluationDataFrame(queryFile:String, dataSetFile:String, sc:SparkContext): DataFrame ={
     // return should be Dataframe
     // input file format : a txt file with first column artist , second column song tittle
     val spark_session: SparkSession = SparkSession.builder.master("local").getOrCreate
-    val src = Source.fromFile(inputFile)
-    val iter = src.getLines().map(_.split(":"))
+    val dataset = Source.fromFile(dataSetFile)
+    val datasetIter = dataset.getLines().map(_.split(";"))
+    val query = Source.fromFile(queryFile)
+    val queryIter = query.getLines().map(_.split(";"))
     val result = new StringBuilder
     // print the uid for Guest
-    for (l <- iter){
+    for (l <- queryIter){
       val compound_key = l(0).toLowerCase.replaceAll("\\s", "").replace(",", "").replace(";", "")+"_"+
         l(1).toLowerCase.replaceAll("\\s", "").replace(",", "").replace(";", "")
-      for (i <- features.length){
-        if(features(i)(0).equals(compound_key)){
-          result.append(features(i))
+      for (i <- datasetIter){
+        if(i(0).equals(compound_key)){
+          result.append(i)
           result.append(";")
         }
       }
     }
 
-    // the rest of iter is not processed
-    src.close()
+    query.close()
+    dataset.close()
 
     val name = "selected_record"
     val fw = new FileWriter(name)
@@ -100,8 +102,8 @@ object DataReader {
     val songInput = sc.textFile("selected_record")
 
     val songInfos = songInput.map(
-      s => (s(4),s(5),s(6),s(7),s(8),s(9),s(10),s(11)))
-    val songInfoDF = spark_session.createDataFrame(songInfos).toDF("ArtFam","ArtHot","Duration","Loudness","SongHot","Tempo","meanPrice","download","confidence","jamCount","tastecount")
+      s => (s(1),s(2),s(3),s(4),s(5),s(6),s(7),s(8),s(9),s(10)))
+    val songInfoDF = spark_session.createDataFrame(songInfos).toDF("ArtFam","ArtHot","Duration","Loudness","SongHot","Tempo","meanPrice","download","jamCount","tastecount")
     songInfoDF
     // feature for 680K CSV is Array("artist","songTitle","trackID","songID","artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "confidence", "jamCount", "tastecount")
   }
