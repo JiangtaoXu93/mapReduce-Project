@@ -1,5 +1,8 @@
 # input file for query
-QUERY_FILE = input.csv
+QUERY_FILE = ../input.csv
+
+# output file path and name 
+OUTPUT_FILE = ../output.csv
 
 # file used as our database
 CSV_NAME = dataset_820k.csv
@@ -35,7 +38,7 @@ build:
 
 predict:
 	spark-submit  --master local[*]   --class neu.pdpmr.project.Model $(JAR_NAME) $(QUERY_FILE) $(CSV_NAME)
-	mv temp/part-*.csv  output.csv
+	mv temp/part-*.csv  $(OUTPUT_FILE)
 	rm -rf temp
 
 train:
