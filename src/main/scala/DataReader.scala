@@ -1,4 +1,4 @@
-
+package neu.pdpmr.project
 
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.feature.VectorAssembler
