@@ -52,7 +52,7 @@ object GBTRegression{
       .setMetricName("rmse")
     val rmse = evaluator.evaluate(predictions)
 
-    println("Dataset size "+dataset.count())
+    println("testSet size "+test.count())
     println("Root Mean Squared Error (RMSE) on test data = " + rmse)
 
   }
