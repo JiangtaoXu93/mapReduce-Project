@@ -13,14 +13,19 @@ knitr::opts_chunk$set(echo = TRUE)
 Given a download dataset, try to make a machine learning model to predict downloads based on several dataset.
 
 ###<span style = "color:#588bae">Preparing Data</span>
- - After doing some pre-analysis and disscussion, we decided that we are going to use 4 dataset, joining them together and made our training dataset. The four datasets are: downloads, song_info, jam_to_msd, train_triplets. We figured that we should have all the feature we needed to make a pretty accurate prediction.
+ - After doing some pre-analysis and discussion, we decided that we are going to use 4 dataset, joining them together and made our training dataset. The four datasets are: downloads, song_info, jam_to_msd, train_triplets. We figured that we should have all the feature we needed to make a pretty accurate prediction.
  - Aggregated jam_to_msd and train_triplets.
- These 2 features are recorded based on users. If we were to joint them with song_info, we had to first aggreated them on songs. Easy to do in spark but not at all trivial.
+ These 2 features are recorded based on users. If we were to joint them with song_info, we had to first aggregated  them on songs. Easy to do in spark but not at all trivial.
  - From 30k to 800k
- First we filted out the corrupted columns and did an inner joint on all 4 of the above dataset, and ended up with a csv file with only 30k rows. Several steps we took to get better:
+ First we filtered out the corrupted columns and did an inner joint on all 4 of the above dataset, and ended up with a csv file with only 30k rows. Several steps we took to get better:
 1) Only doing an inner joint between song_info and downloads, and then left joint the other 2 with the result obtained. And we filled in the null values with 0. This gives us around 400k rows.
 2) We found that after filtering out the corrupted columns, only 580w rows remains in song_info, thus resulting only 400k remaining. We tried to filled in the missing value by the techniques as follow:
-Based on the assumption of the same artist produced kind of similar songs, we produced an..
+Based on the assumption of the same artist produced kind of similar songs, we produced an artist_average.csv, which contains the average of the feature for every artist exist. Because almost all songs in song_info has an artist_id except 3, if we're able to make this file, we can fill in all the missing cells.
+However, when we tried to do that, we found that among 40k artist, there're 8600 of them with average song hottness as NA. In order to solve this, we look into the remaining feature, and had this intersting finding:
+
+![Caption for the picture.](./songhot_artisthot_plot.jpg)
+
+-Where x axis is song hottness and y axis is artist hottness. We can see there's a strong correlation between these 2, thus we fill in those missing song hottness with the corresponding artist hottness.
 
 This gives us a new dataset with around 680k rows. Still rooms to improve.
 
@@ -28,7 +33,7 @@ This gives us a new dataset with around 680k rows. Still rooms to improve.
 I.   Convert them to lower cases
 II.  Remove blank space and all the punctuation.
 III. Remove "and", "feat", "vs"
-Finally we have a dataset with 800k songs, which covers around 80% of the overall data. For those that were not in our dataset, we think most likely noboday really cares about them. So we'll predict 0 for them, can't be wrong.
+Finally, we have a dataset with 800k songs, which covers around 80% of the overall data. For those that were not in our dataset, we think most likely nobody really cares about them. So we'll predict 0 for them, can't be too wrong.
 
 ###<span style = "color:#588bae">Feature Selection</span>
 - Step 1: Pearson correlation. This gives us an intuition of how closely a certain feature is related to the model.
@@ -47,13 +52,13 @@ Jam_count(without filling)        | 0.87
 taste_count(filled with 0)        | 0.05
 taste_count(without filling)      | 0.64
 
-It's interesting to see that taste_count(filled with 0) and Jam_count(filled with 0) almost have no realtion with label. Filling 0 blindly hurts the model accuray. Another intersting fact is that mean price is closely (and positive) related to label, which suggest a higher price implies a higher download, which is very un-expected.
+It's interesting to see that taste_count(filled with 0) and Jam_count(filled with 0) almost have no realtion with label. Filling 0 blindly hurts the model accuracy. Another intersting fact is that mean price is closely (and positive) related to label, which suggest a higher price implies a higher download, which is very un-expected.
 
 But there're some drawbacks: since it only shows the linear correlation, and there could some high dimensional relation between the feature and the label. 
 
 - Step 2: Pick all the features above(with high correlation), train a random forest model on a randomly selected subset(with non-linearity imposed)
 
-- Step 3: Deleting the model on at each time and recorded the error, which is a pratical way (espeacialy in non-linear system) to determine which feature has a big impact on the model.
+- Step 3: Deleting the model on at each time and recorded the error, which is a practical way (especially in non-linear system) to determine which feature has a big impact on the model.
 At the end we had a table looks like this:
 
 Features                          | RSME
@@ -69,14 +74,12 @@ without loudness                  | 230
 without song_hottness             | 221
 
 ###<span style = "color:#588bae">Obtaining Dataset</span>
--  General idea: inner joint 2 tables: song_info and donwloads on artist name and song title.
+-  General idea: inner joint 2 tables: song_info and downloads on artist name and song title.
 -  Left joint Jam and taste: fill in 0 with the missing values. We think this assumption is valid because if a song never show up in these tables, most likely nobody likes them and nobody has played it. Our model accuracy partly endorse this assumption.
 
 ###<span style = "color:#588bae">Implementation</span>
 -  We make use of the dataframe in spark to make efficient join.
 
-###<span style = "color:#588bae">Choosing Features</span>
--  Explanation of the features that we chosed.
 
 ###<span style = "color:#588bae">Model Selection</span>
 -  Trying with different model and the result.
@@ -85,6 +88,8 @@ without song_hottness             | 221
 ###<span style = "color:#588bae">Machine Learning Implementation</span>
 -  Spark ML
 
+###<span style = "color:#588bae">Prediction</span>
+-  During prediction, we wrote a getEvaluationDataFrame function to obtain a dataframe that contains the features needed to feed in the model. In getEvaluationDataFrom, we created 2 dataframe: one for query and one for our dataset, and then do a left join on query dataframe. There're several advantages: first, we don't have to go through the whole dataset for each query. Second, for the artist and titles that are not in the dataset, we fill 
 
 ###<span style = "color:#588bae">Testing With Current Model</span>
 
