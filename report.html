@@ -264,17 +264,13 @@ $(document).ready(function () {
 </tbody>
 </table>
 </div>
-<div id="obtaining-dataset" class="section level3">
-<h3><span style="color:#588bae">Obtaining Dataset</span></h3>
-<ul>
-<li>General idea: inner joint 2 tables: song_info and downloads on artist name and song title.</li>
-<li>Left joint Jam and taste: fill in 0 with the missing values. We think this assumption is valid because if a song never show up in these tables, most likely nobody likes them and nobody has played it. Our model accuracy partly endorse this assumption.</li>
-</ul>
-</div>
 <div id="implementation" class="section level3">
 <h3><span style="color:#588bae">Implementation</span></h3>
 <ul>
-<li>We make use of the dataframe in spark to make efficient join.</li>
+<li><p>Step 1: run <code>getCleanedSongInfo.scala</code> to get a new data set containing needed features: In this step, we first fetched average features of each artist. Especially, filled <em>Song Familarity</em> by 0.5 if there is no song familarity for one artist, where 0.5 is average of song familarity in whole data set; filled <em>Song Hotness</em> by artist hotness, which as we talked in <strong>Preparing Data</strong> part; if there is no artist hotness, remove this row. Second, we selected the needed feature from song_info.csv, and then join with average features on <em>artist_id</em>. Fimally, we got a mergedSongInfo</p></li>
+<li><p>Step 2: run <code>JoiningTable.scala</code> to get data set for training: In this step, we first inner join mergedSongInfo with download.csv on combined key: <em>ArtistName_Title</em>, then we sequentially left join with jam_count on <em>track_id</em>, left join taste_count on <em>song_id</em>. After removing the String column, we got our traing set. We make use of the dataframe in spark to make efficient join.</p></li>
+<li><p>Step 3: run <code>LinearRegression.scala</code>, <code>RandomForestRegression.scala</code>, <code>GBTRegression.scala</code> to training model separately. In each model, we used built-in function from org.apache.spark.ml._</p></li>
+<li><p>Step 4: run <code>Prediction.scala</code> with input query and model to predict result.</p></li>
 </ul>
 </div>
 <div id="model-selection" class="section level3">
