@@ -18,16 +18,15 @@ Given a download dataset, try to make a machine learning model to predict downlo
  These 2 features are recorded based on users. If we were to joint them with song_info, we had to first aggregated  them on songs. Easy to do in spark but not at all trivial.
  - From 30k to 800k
  First we filtered out the corrupted columns and did an inner joint on all 4 of the above dataset, and ended up with a csv file with only 30k rows. Several steps we took to get better:
-1) Only doing an inner joint between song_info and downloads, and then left joint the other 2 with the result obtained. And we filled in the null values with 0. This gives us around 400k rows.
-2) We found that after filtering out the corrupted columns, only 580w rows remains in song_info, thus resulting only 400k remaining. We tried to filled in the missing value by the techniques as follow:
+  1) Only doing an inner joint between song_info and downloads, and then left joint the other 2 with the result obtained. And we filled in the null values with 0. This gives us around 400k rows.
+  2) We found that after filtering out the corrupted columns, only 580w rows remains in song_info, thus resulting only 400k remaining. We tried to filled in the missing value by the techniques as follow:
 Based on the assumption of the same artist produced kind of similar songs, we produced an artist_average.csv, which contains the average of the feature for every artist exist. Because almost all songs in song_info has an artist_id except 3, if we're able to make this file, we can fill in all the missing cells.
 However, when we tried to do that, we found that among 40k artist, there're 8600 of them with average song hottness as NA. In order to solve this, we look into the remaining feature, and had this intersting finding:
+Where x axis is song hottness and y axis is artist hottness. We can see there's a strong correlation between these 2, thus we fill in those missing song hottness with the corresponding artist hottness.
 
 ![Caption for the picture.](./songhot_artisthot_plot.jpg)
 
--Where x axis is song hottness and y axis is artist hottness. We can see there's a strong correlation between these 2, thus we fill in those missing song hottness with the corresponding artist hottness.
-
-This gives us a new dataset with around 680k rows. Still rooms to improve.
+  This gives us a new dataset with around 680k rows. Still rooms to improve.
 
 3) After carefully looking at the downloads set, we found that artist name and song title are not very clean. So we do the following:
 I.   Convert them to lower cases
@@ -82,14 +81,31 @@ without song_hottness             | 221
 
 
 ###<span style = "color:#588bae">Model Selection</span>
--  Trying with different model and the result.
+-  We tried a bunch of models: linear regression, random forest, gradient boasting tree, ect. Each model has its own pros and cons, we report them as follow:
 
 
 ###<span style = "color:#588bae">Machine Learning Implementation</span>
--  Spark ML
+-  We implemented our machine learning model mainly in SparkML, and ran the training process in aws. The enviroments are set as follow:
+
+Attribute                         | Value
+----------------------------------|-------------------------------
+Java Version                      | 1.8.0_102
+Spark Version                     | 2.2.0
+Model Identifier                  |	MacBookPro13,2
+Processor Name                    |	Intel Core i5
+Processor Speed                   |	2.2 GHz
+Number of Processors              |	1
+Total Number of Cores             |	4
+Memory                            | 16 GB
+Driver Memory                     | 2 GB
+Executor Memory                   | 2 GB
 
 ###<span style = "color:#588bae">Prediction</span>
 -  During prediction, we wrote a getEvaluationDataFrame function to obtain a dataframe that contains the features needed to feed in the model. In getEvaluationDataFrom, we created 2 dataframe: one for query and one for our dataset, and then do a left join on query dataframe. There're several advantages: first, we don't have to go through the whole dataset for each query. Second, for the artist and titles that are not in the dataset, we fill 
 
-###<span style = "color:#588bae">Testing With Current Model</span>
+###<span style = "color:#588bae">Conclusion</span>
+- GBT gives the best result, we had a model achieved RSME = 26, but it took a long time to train (12 hours on aws with 5 nodes) and too big to fit in the jar (190M).
+- Linear regression seems to be a bottom line: it runs fast and yields rsme around 200.
+- Adding bad features, like taste_count filling with 0 for nulls hurts model accuracy. So it's better to leave out those features rather than inserting wrong values.
+- We thought about using different models for samples with different number of features, it did increase accuracy a little bit but again the both the model and the dataset will be too big to fit in 100m.
 
