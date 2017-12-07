@@ -1,9 +1,17 @@
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import java.io.FileWriter
+
+import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.sql.{DataFrame, SQLContext, SparkSession}
 import org.apache.spark.ml.feature.VectorAssembler
+
+import scala.io.Source
 
 object DataReader {
 
   def convertCSV(csvName: String, datasetDir: String, sqlContext: SQLContext): DataFrame = {
+
+    val conf = new SparkConf().setMaster("local").setAppName("Million Music")
+    val sc = new SparkContext(conf)
 
     var dataset = sqlContext.read
       .format("com.databricks.spark.csv")
@@ -58,13 +66,43 @@ object DataReader {
   }
 
 
-  def getEvaluationDataFrame(inputFile:String, features:Array[String]): Unit ={
+  def getEvaluationDataFrame(inputFile:String, features:Array[String], sc:SparkContext): DataFrame ={
     // return should be Dataframe
     // input file format : a txt file with first column artist , second column song tittle
+    val spark_session: SparkSession = SparkSession.builder.master("local").getOrCreate
+    val src = Source.fromFile(inputFile)
+    val iter = src.getLines().map(_.split(":"))
+    val result = new StringBuilder
+    // print the uid for Guest
+    for (l <- iter){
+      val compound_key = l(0).toLowerCase.replaceAll("\\s", "").replace(",", "").replace(";", "")+"_"+
+        l(1).toLowerCase.replaceAll("\\s", "").replace(",", "").replace(";", "")
+      for (i <- features.length){
+        if(features(i)(0).equals(compound_key)){
+          result.append(features(i))
+          result.append(";")
+        }
+      }
+    }
 
+    // the rest of iter is not processed
+    src.close()
 
+    val name = "selected_record"
+    val fw = new FileWriter(name)
+    val temp = result.toString().split(";")
+    for (i <- temp) {
+      fw.append(i.toString)
+      fw.append("\n")
+    }
+    fw.close()
+
+    val songInput = sc.textFile("selected_record")
+
+    val songInfos = songInput.map(
+      s => (s(4),s(5),s(6),s(7),s(8),s(9),s(10),s(11)))
+    val songInfoDF = spark_session.createDataFrame(songInfos).toDF("ArtFam","ArtHot","Duration","Loudness","SongHot","Tempo","meanPrice","download","confidence","jamCount","tastecount")
+    songInfoDF
     // feature for 680K CSV is Array("artist","songTitle","trackID","songID","artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "confidence", "jamCount", "tastecount")
-
-
   }
 }
