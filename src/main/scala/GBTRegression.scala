@@ -12,25 +12,20 @@ object GBTRegression{
     val mode = args(2)
     val csvName = args(3)
 
-    // set parameters for GBT
-    val maxIter = 25
-    val maxDepth = 20
-
-
+    // get parameters for GBT
+    val maxIter = 10
+    val maxDepth = 10
 
     //specify model names according to algorithm, csvName and its parameters
-    val modelName = "GBTRegression-" +csvName +"-maxIter"+maxIter+"-maxDepth"+maxDepth
-
-
+    val modelName = "GBTRegression-offJam-offTaste" +csvName +"-maxIter"+maxIter+"-maxDepth"+maxDepth
 
 
     val conf = new SparkConf().setAppName(modelName)
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
-
-    val dataset = DataReader.convertCSV(csvName,args(0),sqlContext)
-    val Array(train,test) = dataset.randomSplit(Array(0.8,0.2))
+    val dataset = DataReader.convertCSV(csvName,inputDir,sqlContext)
+    val Array(train,test) = dataset.randomSplit(Array(0.99,0.01))
 
 
     if(mode == "training") {
