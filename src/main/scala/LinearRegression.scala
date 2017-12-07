@@ -1,8 +1,11 @@
+import neu.pdpmr.project.DataReader
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.ml.regression.{LinearRegressionModel, LinearRegression}
+import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
-
+/*
+ * @author Yang Xia, Jiangtao Xu, Yu Wen
+ */
 object LinearRegression {
 
   def main(args: Array[String]): Unit = {
@@ -18,7 +21,7 @@ object LinearRegression {
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
-    val dataset = DataReader.convertCSV(csvName, args(0), sqlContext)
+    val dataset = DataReader.getTrainingDataFrame(csvName, args(0), sqlContext)
     val Array(train, test) = dataset.randomSplit(Array(0.99, 0.01))
 
     if (mode == "training") {

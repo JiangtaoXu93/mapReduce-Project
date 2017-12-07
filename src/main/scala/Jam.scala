@@ -1,3 +1,6 @@
+/*
+ * @author Yang Xia, Jiangtao Xu, Yu Wen
+ */
 class Jam(jam : String, track : String) {
   var JAM_ID : String = jam
   var TRACK_ID : String = track

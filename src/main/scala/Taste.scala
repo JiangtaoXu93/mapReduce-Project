@@ -1,5 +1,7 @@
 import scala.util.Try
-
+/*
+ * @author Yang Xia, Jiangtao Xu, Yu Wen
+ */
 class Taste(jam : String, track : String, c : String) {
   var USER : String = jam
   var SONG : String = track

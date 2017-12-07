@@ -1,10 +1,13 @@
+import neu.pdpmr.project.DataReader
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.regression.{RandomForestRegressionModel, RandomForestRegressor}
 
-
+/*
+ * @author Yang Xia, Jiangtao Xu, Yu Wen
+ */
 object RandomForestRegression {
   def main(args: Array[String]): Unit = {
     val inputDir = args(0)
@@ -24,7 +27,7 @@ object RandomForestRegression {
     val sc = new SparkContext(conf)
     val sqlContext = new SQLContext(sc)
 
-    val dataset = DataReader.convertCSV(csvName,inputDir,sqlContext)
+    val dataset = DataReader.getTrainingDataFrame(csvName,inputDir,sqlContext)
     val Array(train,test) = dataset.randomSplit(Array(0.99,0.01))
 
 

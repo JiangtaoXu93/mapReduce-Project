@@ -1,21 +1,20 @@
 
 
 //author: Jiangtao
-class AverageSongInfo( ai : String, du : String, ld : String, sh : String, ah : String, tp: String, af: String) extends Serializable{
-  var ARTIST_ID : String = ai
-  var TEMPO : String = tp
-  var SONG_HOTNESS : String = sh
-  var ARTIST_HOT : String = ah
-  var LOUDNESS : String = ld
-  var DURATION : String = du
-  var ARTIST_FAM : String = af
+class AverageSongInfo(ai: String, du: String, ld: String, sh: String, ah: String, tp: String, af: String) extends Serializable {
+  var ARTIST_ID: String = ai
+  var TEMPO: String = tp
+  var SONG_HOTNESS: String = sh
+  var ARTIST_HOT: String = ah
+  var LOUDNESS: String = ld
+  var DURATION: String = du
+  var ARTIST_FAM: String = af
 
 
-
-
-  def this(line : String) ={
-    this("","","","","","","")
+  def this(line: String) = {
+    this("", "", "", "", "", "", "")
     def tokens = line.split(",")
+
     this.ARTIST_ID = tokens(0)
     this.TEMPO = tokens(1)
     this.SONG_HOTNESS = tokens(2)
@@ -24,9 +23,6 @@ class AverageSongInfo( ai : String, du : String, ld : String, sh : String, ah : 
     this.DURATION = tokens(5)
     this.ARTIST_FAM = tokens(6)
   }
-
-
-
 
 
   def getDuration(): String = this.DURATION
@@ -42,8 +38,6 @@ class AverageSongInfo( ai : String, du : String, ld : String, sh : String, ah : 
   def getSongHot(): String = this.SONG_HOTNESS
 
   def getArtistId(): String = this.ARTIST_ID
-
-
 
 
 }
