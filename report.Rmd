@@ -2,7 +2,9 @@
 title: "Project Report"
 author: "Jiangtao Xu/Yang Xia/Yu Wen"
 date: "2017/12/5"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -13,14 +15,14 @@ knitr::opts_chunk$set(echo = TRUE)
 Given a download dataset, try to make a machine learning model to predict downloads based on several dataset.
 
 ###<span style = "color:#588bae">Preparing Data</span>
- - After doing some pre-analysis and discussion, we decided that we are going to use 4 dataset, joining them together and making our training dataset. The four datasets are: downloads, song_info, jam_to_msd, train_triplets. We figured that we should have all the feature we needed to make a pretty accurate prediction.
+ - After doing some pre-analysis and discussion, we decided that we are going to use 4 dataset, joining them together and made our training dataset. The four datasets are: downloads, song_info, jam_to_msd, train_triplets. We figured that we should have all the feature we needed to make a pretty accurate prediction.
  - Aggregated jam_to_msd and train_triplets.
  These 2 features are recorded based on users. If we were to joint them with song_info, we had to first aggregated  them on songs. Easy to do in spark but not at all trivial.
  - From 30k to 800k
  First we filtered out the corrupted columns and did an inner joint on all 4 of the above dataset, and ended up with a csv file with only 30k rows. Several steps we took to get better:
   1) Only doing an inner joint between song_info and downloads, and then left joint the other 2 with the result obtained. And we filled in the null values with 0. This gives us around 400k rows.
   2) We found that after filtering out the corrupted columns, only 580w rows remains in song_info, thus resulting only 400k remaining. We tried to filled in the missing value by the techniques as follow:
-Based on the assumption of the same artist produced kind of similar songs, we produced an artist_average.csv, which contains the average of the feature for every artist exist. Because almost all songs in song_info has an artist_id except 3, if we're able to make this file, we can fill in all the missing cells by average grouping by its artist.
+Based on the assumption of the same artist produced kind of similar songs, we produced an artist_average.csv, which contains the average of the feature for every artist exist. Because almost all songs in song_info has an artist_id except 3, if we're able to make this file, we can fill in all the missing cells.
 However, when we tried to do that, we found that among 40k artist, there're 8600 of them with average song hottness as NA. In order to solve this, we look into the remaining feature, and had this intersting finding:
 Where x axis is song hottness and y axis is artist hottness. We can see there's a strong correlation between these 2, thus we fill in those missing song hottness with the corresponding artist hottness.
 
@@ -72,24 +74,12 @@ without duration                  |	256
 without loudness                  | 230
 without song_hottness             | 221
 
+###<span style = "color:#588bae">Obtaining Dataset</span>
+-  General idea: inner joint 2 tables: song_info and downloads on artist name and song title.
+-  Left joint Jam and taste: fill in 0 with the missing values. We think this assumption is valid because if a song never show up in these tables, most likely nobody likes them and nobody has played it. Our model accuracy partly endorse this assumption.
 
 ###<span style = "color:#588bae">Implementation</span>
-
-- Step 1: run `getCleanedSongInfo.scala` to get a new data set containing needed features:
-
-In this step, we first fetched average features of each artist. Especially, filled *Song Familarity* by 0.5 if there is no song familarity for one artist, where 0.5 is average of song familarity in whole data set; filled *Song Hotness* by artist hotness, which as we talked in **Preparing Data** part; if there is no artist hotness, remove this row. Second, we selected the needed feature from song_info.csv, and then join with average features on *artist_id*. Fimally, we got a mergedSongInfo
-
-- Step 2: run `JoiningTable.scala` to get data set for training:
-
-In this step, we first inner join mergedSongInfo with download.csv on combined key: *ArtistName_Title*, then we sequentially left join with jam_count on *track_id*, left join taste_count on *song_id*. After removing the String column, we got our traing set. We make use of the dataframe in spark to make efficient join.
-
-- Step 3: run `LinearRegression.scala`, `RandomForestRegression.scala`, `GBTRegression.scala` to training model separately.
-
-In each model, we used built-in function from org.apache.spark.ml._
-
-- Step 4: run `Prediction.scala` with input query and model to predict result.
-
-
+-  We make use of the dataframe in spark to make efficient join.
 
 
 ###<span style = "color:#588bae">Model Selection</span>
