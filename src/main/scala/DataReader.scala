@@ -134,32 +134,37 @@ object DataReader {
     // return should be Dataframe
     // input file format : a txt file with first column artist , second column song tittle
     val spark_session: SparkSession = SparkSession.builder.master("local").getOrCreate
-    val conf = new SparkConf().setMaster("local").setAppName("Joint2DataFrame")
-    val sc = new SparkContext(conf)
-
+    //val conf = new SparkConf().setMaster("local").setAppName("Joint2DataFrame")
 
     // Create two dataframe, one for query and the other for our dataset
     val dataset = sqlContext.read
       .format("com.databricks.spark.csv")
       .option("header", "true")
       .option("inferSchema", "true")
-      .load("data/" + dataSetFile)
+      .load(dataSetFile)
       .distinct()
 
     val dataSetRecord = dataset.toDF("key", "artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "jamCount", "tasteCount").cache()
 
 
-    val queryInfo = sc.textFile("data/" + queryFile).map(q => (q.split(";")(0).toLowerCase.replaceAll("\\s","").replaceAll("\\p{P}","")+"_"
+
+    val queryInfo = sc.textFile(queryFile).map(q => (q.split(";")(0).toLowerCase.replaceAll("\\s","").replaceAll("\\p{P}","")+"_"
       +q.split(";")(1).toLowerCase.replaceAll("\\s","").replaceAll("\\p{P}",""),1))
 
     val queryRecord = spark_session.createDataFrame(queryInfo).toDF("key","count").drop("count")
 
-    val joint = queryRecord.join(dataSetRecord,queryRecord("key")===dataSetRecord("key"),"inner").drop(dataSetRecord("key"))
+    var joint = queryRecord.join(dataSetRecord,queryRecord("key")===dataSetRecord("key"),"inner").drop(dataSetRecord("key"))
 
 
+    val assembler = new VectorAssembler()
+    assembler.setInputCols(Array("artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "jamCount", "tasteCount"))
+      .setOutputCol("features")
+    joint = assembler.transform(joint)
+    joint = joint.select("download", "features")
+    joint = joint.withColumnRenamed("download", "label").cache()
     joint
 
-    // feature for 680K CSV is Array("artist","songTitle","trackID","songID","artFam", "artHot", "duration", "loudness", "songHot", "tempo", "meanPrice", "download", "confidence", "jamCount", "tastecount")
+
   }
 
 }
